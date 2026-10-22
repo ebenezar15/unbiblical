@@ -75,7 +75,7 @@ p{margin:0}
 .ibtn:hover{border-color:var(--accent)}
 .ibtn svg{width:18px;height:18px;flex:none}
 #menuBtn{display:none}
-@media (max-width:980px){
+@media (max-width:1180px){
   #menuBtn{display:inline-flex}
   .nav{display:none;position:absolute;top:100%;left:0;right:0;flex-direction:column;flex-wrap:nowrap;gap:4px;background:var(--surface);border-bottom:1px solid var(--line);box-shadow:var(--shadow);padding:10px max(16px,env(safe-area-inset-right,0px)) 14px max(16px,env(safe-area-inset-left,0px))}
   .nav.open{display:flex}
@@ -358,6 +358,36 @@ mark{background:var(--accent2);color:var(--bg);border-radius:3px;padding:0 2px}
 footer{border-top:1px solid var(--line);padding-top:26px;padding-bottom:26px;color:var(--muted);font-size:.86rem}
 @media (prefers-reduced-motion:reduce){ *,*::before,*::after{-webkit-animation:none!important;animation:none!important;transition:none!important} }
 
+/* shared reader responses */
+.rbox{margin-top:4px;border-top:1px dashed var(--line);padding-top:12px;display:grid;gap:10px}
+.rhead{display:flex;align-items:center;gap:10px}
+.rn{font-size:.78rem;font-weight:800;color:var(--muted)}
+.rlist{display:grid;gap:8px}
+.ritem{position:relative;display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border-radius:12px;background:var(--surface);border:1px solid var(--line);border-left:5px solid var(--pc);overflow:hidden;min-width:0}
+.ritem::before{content:"";position:absolute;top:0;left:0;right:0;bottom:0;background:var(--pc);opacity:.07;pointer-events:none}
+.ritem .av{position:relative;flex:none;width:30px;height:30px;border-radius:50%;background:var(--pc);object-fit:cover}
+.rbody{position:relative;flex:1;min-width:0;display:grid;gap:4px}
+.rmeta{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 10px;font-size:.8rem;color:var(--muted)}
+.rmeta b{color:var(--fg);font-size:.9rem}
+.rmeta .you{font-size:.68rem;font-weight:900;letter-spacing:.08em;text-transform:uppercase;padding:1px 6px;border-radius:6px;background:var(--pc);color:var(--surface)}
+.rtext{font-size:.94rem;white-space:pre-wrap}
+.rctx{font-size:.8rem;font-weight:800;color:var(--fg);text-decoration:none}
+.rctx:hover{text-decoration:underline}
+.racts{display:flex;gap:12px}
+.linkbtn{background:none;border:0;padding:0;font-size:.8rem;font-weight:800;color:var(--muted);cursor:pointer;text-decoration:underline}
+.linkbtn:hover{color:var(--fg)}
+.rform{display:grid;gap:8px}
+.rform textarea{width:100%;min-height:76px;resize:vertical;font:inherit;font-size:16px;line-height:1.5;padding:10px 12px;border-radius:12px;border:1px solid var(--line);background:var(--surface);color:var(--fg)}
+.rform textarea:focus{outline:2px solid var(--accent);outline-offset:1px}
+.rfoot{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between}
+.rsend{padding:8px 14px}
+.rnote{font-size:.86rem;color:var(--muted)}
+.rbadge{flex:none;align-self:center;min-width:24px;height:24px;padding:0 7px;border-radius:999px;background:var(--accent);color:var(--accent-fg);font-size:.75rem;font-weight:900;display:inline-flex;align-items:center;justify-content:center}
+.q .rbox{margin-top:auto}
+.rsel{font:inherit;font-size:16px;padding:7px 10px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--fg);max-width:100%;min-width:0;flex:1 1 220px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.flash{box-shadow:0 0 0 3px var(--accent)!important;transition:box-shadow .3s}
+
 </style>
 </head>
 <body>
@@ -493,7 +523,7 @@ var uniqRefs = {}; REFS.forEach(function(r){ uniqRefs[r.ref.replace(/\s+/g," ")]
 var totals = { claims: sum(function(c){ return c.claims.length; }), qs: sum(function(c){ return c.questions.length; }), crit: sum(function(c){ return c.criticisms.length; }), refs: Object.keys(uniqRefs).length };
 
 /* ---------- nav ---------- */
-var NAV = [["home","Map"],["chapters","Chapters"],["diagrams","Diagrams"],["influences","Influences"]].concat(ANS ? [["lenses","Six Lenses"],["compare","Compare"]] : [["positions","Positions"]]).concat([["questions","Questions"],["scripture","Scripture"]]);
+var NAV = [["home","Map"],["chapters","Chapters"],["diagrams","Diagrams"],["influences","Influences"]].concat(ANS ? [["lenses","Six Lenses"],["compare","Compare"]] : [["positions","Positions"]]).concat([["questions","Questions"],["scripture","Scripture"]]).concat(ANS ? [] : [["responses","Responses"]]);
 nav.innerHTML = NAV.map(function(n){ return '<a href="#' + n[0] + '" data-k="' + n[0] + '">' + n[1] + "</a>"; }).join("");
 nav.addEventListener("click", function(e){ if (e.target.closest("a")) closeMenus(); });
 $("#foot").innerHTML = ANS
@@ -508,6 +538,127 @@ var pendingRef = null, pendingBook = null, pendingScroll = null;
 document.addEventListener("click", function(e){ var r = e.target.closest(".ref"); if (r) { e.preventDefault(); pendingRef = r.getAttribute("data-ref").replace(/[-–,].*$/, ""); go("scripture"); } });
 function go(h){ if (location.hash === "#" + h) route(); else location.hash = h; }
 function searchBox(id, ph){ return '<div class="search">' + IC.search + '<input id="' + id + '" type="search" placeholder="' + esc(ph) + '" autocomplete="off" aria-label="' + esc(ph) + '"></div>'; }
+
+/* ---------- shared reader responses (Explorer only) ----------
+   Each person owns one document responses/<their id> = {items:{<itemId>:{key,ch,text,ts,edited?}}}.
+   Everyone admitted reads the whole collection; each person writes only their own document;
+   the artifact owner may also remove anyone's item (moderation). */
+var RS = { on: !ANS, status: "loading", db: null, user: null, uid: null, owner: false, canWrite: false, docs: {}, byKey: {}, all: [], prof: {}, msg: "", queue: Promise.resolve(), filterP: "", filterC: "" };
+var CTX = {};
+function rkey(c, kind, i){ return c.id + "-" + kind + i; }
+CH.forEach(function(c){
+  c.claims.forEach(function(a, i){ CTX[rkey(c, "a", i)] = {c:c, kind:"Argument", label:a.claim}; });
+  c.questions.forEach(function(q, i){ CTX[rkey(c, "q", i)] = {c:c, kind:"Question", label:q.q}; });
+  c.criticisms.forEach(function(k, i){ CTX[rkey(c, "c", i)] = {c:c, kind:"Critique", label:k.of}; });
+});
+function respBox(key){ if (!RS.on) return "";
+  return '<div class="rbox" data-key="' + key + '"><div class="rhead"><span class="eyebrow">Responses</span><span class="rn" data-count="' + key + '"></span></div><div class="rlist" data-list="' + key + '"></div><div class="rcompose" data-compose="' + key + '"></div></div>'; }
+function respBadge(key){ return RS.on ? '<span class="rbadge" data-badge="' + key + '" hidden></span>' : ""; }
+function fmtTime(ts){ try { return new Date(ts).toLocaleString(undefined, {day:"numeric", month:"short", year:"numeric", hour:"numeric", minute:"2-digit"}); } catch(e){ return ""; } }
+function pinfo(uid){ var p = RS.prof[uid] || {}; return {name: p.name || (uid === RS.uid ? "You" : "A reader"), color: p.color || "var(--accent)", avatar: p.avatarUrl || ""}; }
+function itemHTML(it, withCtx){
+  var p = pinfo(it.uid), mine = it.uid === RS.uid, canDel = mine || RS.owner, ctx = CTX[it.key];
+  return '<div class="ritem" style="--pc:' + esc(p.color) + '" data-item="' + esc(it.id) + '" data-owner="' + esc(it.uid) + '">' +
+    (p.avatar ? '<img class="av" alt="" src="' + esc(p.avatar) + '">' : '<span class="av"></span>') +
+    '<div class="rbody">' + (withCtx && ctx ? '<a class="rctx" href="#' + ctx.c.id + '" data-gokey="' + esc(it.key) + '">' + chName(ctx.c) + " · " + ctx.kind + ": " + esc(ctx.label) + "</a>" : "") +
+    '<div class="rmeta"><b>' + esc(p.name) + "</b>" + (mine ? '<span class="you">you</span>' : "") + "<span>" + fmtTime(it.ts) + (it.edited ? " · edited" : "") + "</span></div>" +
+    '<p class="rtext">' + esc(it.text) + "</p>" +
+    (canDel ? '<div class="racts">' + (mine ? '<button class="linkbtn" data-edit="' + esc(it.id) + '">Edit</button>' : "") + '<button class="linkbtn" data-del="' + esc(it.id) + '">Delete</button></div>' : "") + "</div></div>"; }
+function composerHTML(key){
+  if (RS.status === "loading") return '<p class="rnote">Loading responses…</p>';
+  if (RS.status === "off") return '<p class="rnote">Responses can be read and added when this page is opened from its shared claude.ai link while signed in.</p>';
+  if (!RS.canWrite) return '<p class="rnote">' + (RS.msg || "You can read responses here. To add your own, ask the page owner for Contributor access.") + "</p>";
+  return '<button class="chipbtn ropen" data-open="' + key + '">+ Respond to this</button><div class="rform" hidden><label class="sr" for="rt-' + key + '">Your response</label><textarea id="rt-' + key + '" rows="3" maxlength="3000" placeholder="Add your comment or response to this point"></textarea><div class="rfoot"><span class="rnote" data-err="' + key + '"></span><button class="btn primary rsend" data-send="' + key + '">Add response</button></div></div>'; }
+function paintResponses(root){
+  if (!RS.on) return;
+  $$("[data-list]", root).forEach(function(el){ var k = el.getAttribute("data-list"), items = RS.byKey[k] || []; if (el.querySelector(".rform")) return;
+    el.innerHTML = items.length ? items.map(function(it){ return itemHTML(it, false); }).join("") : (RS.status === "on" ? '<p class="rnote">No responses yet.</p>' : ""); });
+  $$("[data-count]", root).forEach(function(el){ var n = (RS.byKey[el.getAttribute("data-count")] || []).length; el.textContent = n ? n + (n === 1 ? " response" : " responses") : ""; });
+  $$("[data-badge]", root).forEach(function(el){ var n = (RS.byKey[el.getAttribute("data-badge")] || []).length; el.hidden = !n; el.textContent = n; el.title = n + " responses"; });
+  $$("[data-compose]", root).forEach(function(el){ var st = RS.status + ":" + RS.canWrite; if (el.getAttribute("data-st") === st) return; el.setAttribute("data-st", st); el.innerHTML = composerHTML(el.getAttribute("data-compose")); });
+  var all = $("#rall", root); if (all) paintAll(root);
+}
+function rebuild(){
+  var all = []; Object.keys(RS.docs).forEach(function(uid){ var items = RS.docs[uid] || {}; Object.keys(items).forEach(function(id){ var it = items[id]; if (it && typeof it.text === "string" && it.key) all.push({id:id, uid:uid, key:String(it.key), ch:it.ch, text:it.text, ts:+it.ts || 0, edited:it.edited}); }); });
+  all.sort(function(a, b){ return a.ts - b.ts; });
+  var by = {}; all.forEach(function(it){ (by[it.key] = by[it.key] || []).push(it); });
+  RS.all = all; RS.byKey = by;
+  var ids = Object.keys(RS.docs); if (RS.uid && ids.indexOf(RS.uid) < 0) ids.push(RS.uid);
+  var done = function(){ paintResponses(app); };
+  if (RS.user && ids.length) RS.user.profiles(ids).then(function(ps){ RS.prof = ps || {}; done(); }, done); else done();
+}
+function writeMine(mutate, otherUid){
+  var uid = otherUid || RS.uid; if (!RS.db || !uid) return Promise.reject({code:"not_granted"});
+  RS.queue = RS.queue.then(function(){ var items = JSON.parse(JSON.stringify(RS.docs[uid] || {})); mutate(items); return RS.db.doc("responses/" + uid).set({items: items}); });
+  var p = RS.queue; RS.queue = RS.queue.catch(function(){}); return p; }
+function writeError(e, key){
+  var code = e && e.code, msg = code === "invalid_argument" ? "Your access level lets you read responses but not add them. Ask the page owner for Contributor access."
+    : code === "quota_exceeded" ? "The response store is full. The owner can remove old responses to make room." : "Could not save just now. Please try again.";
+  if (code === "invalid_argument") { RS.canWrite = false; RS.msg = msg; paintResponses(app); return; }
+  var el = key && $('[data-err="' + key + '"]'); if (el) el.textContent = msg; }
+function initResponses(){
+  if (!RS.on) return;
+  if (!window.claude || typeof window.claude.use !== "function") { RS.status = "off"; paintResponses(app); return; }
+  Promise.all([window.claude.use("db"), window.claude.use("user")]).then(function(r){
+    RS.db = r[0]; RS.user = r[1];
+    if (!RS.db) { RS.status = "off"; paintResponses(app); return; }
+    var u = RS.user;
+    return Promise.all([u ? u.id() : null, u ? u.isOwner() : false, u ? u.can("data.write") : null]).then(function(v){
+      RS.uid = v[0]; RS.owner = !!v[1]; RS.canWrite = !!RS.uid && v[2] !== false; RS.status = "on";
+      if (RS.uid && v[2] === false) RS.msg = "You can read responses here. To add your own, ask the page owner for Contributor access.";
+      RS.db.collection("responses").onSnapshot(function(snap){ var d = {}; snap.docs.forEach(function(doc){ var b = doc.data() || {}; d[doc.id] = b.items || {}; }); RS.docs = d; rebuild(); },
+        function(){ RS.status = "off"; paintResponses(app); });
+      paintResponses(app);
+    });
+  }).catch(function(){ RS.status = "off"; paintResponses(app); });
+}
+document.addEventListener("click", function(e){
+  if (!RS.on) return;
+  var o = e.target.closest("[data-open]");
+  if (o) { var f = o.nextElementSibling; f.hidden = false; o.hidden = true; var t = f.querySelector("textarea"); try { t.focus({preventScroll:true}); } catch(x){ t.focus(); } return; }
+  var s = e.target.closest("[data-send]");
+  if (s) { var key = s.getAttribute("data-send"), ta = document.getElementById("rt-" + key), text = (ta && ta.value || "").trim(), err = $('[data-err="' + key + '"]');
+    if (!text) { if (err) err.textContent = "Write something first."; return; }
+    var ctx = CTX[key], id = Date.now().toString(36) + Math.random().toString(36).slice(2, 7); s.disabled = true; if (err) err.textContent = "";
+    writeMine(function(items){ items[id] = {key:key, ch:ctx ? ctx.c.num : null, text:text.slice(0, 3000), ts:Date.now()}; })
+      .then(function(){ ta.value = ""; s.disabled = false; var fm = s.closest(".rform"); if (fm && fm.previousElementSibling) { fm.hidden = true; fm.previousElementSibling.hidden = false; } }, function(x){ s.disabled = false; writeError(x, key); });
+    return; }
+  var d = e.target.closest("[data-del]");
+  if (d) { var row = d.closest(".ritem"), iid = d.getAttribute("data-del"), owner = row.getAttribute("data-owner");
+    if (d.getAttribute("data-sure") !== "1") { d.setAttribute("data-sure", "1"); d.textContent = "Tap again to delete"; setTimeout(function(){ if (d.isConnected) { d.removeAttribute("data-sure"); d.textContent = "Delete"; } }, 3500); return; }
+    writeMine(function(items){ delete items[iid]; }, owner !== RS.uid ? owner : null).catch(function(x){ writeError(x); }); return; }
+  var ed = e.target.closest("[data-edit]");
+  if (ed) { var row2 = ed.closest(".ritem"), iid2 = ed.getAttribute("data-edit"), cur = (RS.docs[RS.uid] || {})[iid2]; if (!cur) return;
+    var body = row2.querySelector(".rbody"), p = body.querySelector(".rtext"), acts = body.querySelector(".racts");
+    p.hidden = true; acts.hidden = true;
+    var box = document.createElement("div"); box.className = "rform"; box.innerHTML = '<textarea rows="3" maxlength="3000" aria-label="Edit your response"></textarea><div class="rfoot"><span class="rnote"></span><span style="display:flex;gap:8px"><button class="btn" data-cancel>Cancel</button><button class="btn primary" data-save>Save</button></span></div>';
+    box.querySelector("textarea").value = cur.text; body.appendChild(box);
+    box.querySelector("[data-cancel]").addEventListener("click", function(){ box.remove(); p.hidden = false; acts.hidden = false; });
+    box.querySelector("[data-save]").addEventListener("click", function(){ var t = box.querySelector("textarea").value.trim(); if (!t) return;
+      writeMine(function(items){ if (items[iid2]) { items[iid2].text = t.slice(0, 3000); items[iid2].edited = Date.now(); } }).catch(function(x){ writeError(x); }); });
+    return; }
+  var g = e.target.closest("[data-gokey]");
+  if (g) { e.preventDefault(); var k = g.getAttribute("data-gokey"), c = CTX[k] && CTX[k].c; if (!c) return; pendingScroll = "k-" + k; go(c.id); }
+});
+
+function vResponses(){
+  return '<div class="eyebrow">Responses</div><h1 class="pagetitle">Everyone’s responses in one place</h1><p class="pagelede">Readers can add a comment or response under any argument, question or critique in the chapters. Every response appears here too, colour-coded by person. Filter by person or chapter, and select a response’s heading to jump to the point it answers.</p>' +
+    '<div class="panel" style="margin-bottom:16px"><div class="rstats" id="rstats"></div><div class="toolbar" id="rpeople" style="margin-top:10px"></div><div class="toolbar"><label class="eyebrow" for="rch">Chapter</label><select id="rch" class="rsel"><option value="">All chapters</option>' + CH.map(function(c){ return '<option value="' + c.num + '">' + esc(chName(c) + " · " + c.title) + "</option>"; }).join("") + '</select></div></div><div class="hits" id="rall"></div>'; }
+function paintAll(root){
+  var list = $("#rall", root), stats = $("#rstats", root), ppl = $("#rpeople", root); if (!list) return;
+  if (RS.status !== "on") { stats.innerHTML = ""; ppl.innerHTML = ""; list.innerHTML = '<p class="rnote">' + (RS.status === "loading" ? "Loading responses…" : "Responses can be read and added when this page is opened from its shared claude.ai link while signed in.") + "</p>"; return; }
+  var people = {}; RS.all.forEach(function(it){ people[it.uid] = (people[it.uid] || 0) + 1; });
+  var uids = Object.keys(people).sort(function(a, b){ return people[b] - people[a]; });
+  stats.innerHTML = '<div class="stats" style="margin:0"><div class="stat"><b>' + RS.all.length + '</b><span>responses</span></div><div class="stat"><b>' + uids.length + '</b><span>people</span></div><div class="stat"><b>' + Object.keys(RS.byKey).length + '</b><span>points discussed</span></div></div>';
+  ppl.innerHTML = uids.length ? '<span class="eyebrow">People</span><button class="chipbtn' + (RS.filterP ? "" : " on") + '" data-rp="">Everyone</button>' + uids.map(function(u){ var p = pinfo(u); return '<button class="chipbtn' + (RS.filterP === u ? " on" : "") + '" data-rp="' + esc(u) + '" style="--lc:' + esc(p.color) + '"><span class="d"></span>' + esc(p.name) + ' <span style="opacity:.6">' + people[u] + "</span></button>"; }).join("") : "";
+  var items = RS.all.filter(function(it){ return (!RS.filterP || it.uid === RS.filterP) && (!RS.filterC || String(CTX[it.key] ? CTX[it.key].c.num : it.ch) === RS.filterC); }).slice().reverse();
+  list.innerHTML = items.length ? items.map(function(it){ return itemHTML(it, true); }).join("") : '<p class="rnote">' + (RS.all.length ? "No responses match these filters." : "No responses yet. Open any chapter and add one under an argument, question or critique.") + "</p>";
+}
+function wireResponses(r){
+  $("#rpeople", r).addEventListener("click", function(e){ var b = e.target.closest("[data-rp]"); if (!b) return; RS.filterP = b.getAttribute("data-rp"); paintAll(r); });
+  var sel = $("#rch", r); sel.value = RS.filterC; sel.addEventListener("change", function(){ RS.filterC = sel.value; paintAll(r); });
+  paintAll(r);
+}
 
 /* ---------- mind map ---------- */
 function mindMap(){
@@ -571,15 +722,16 @@ function outlineHTML(o){
   return '<div class="outline">' + head + '<div class="tiles">' + o.items.map(function(it, i){ var L = it.letter && String(it.letter).length <= 3 ? it.letter : String(i + 1);
     return '<div class="tile" style="-webkit-animation-delay:' + i * 80 + "ms;animation-delay:" + i * 80 + 'ms"><span class="L">' + esc(L) + "</span><h4>" + esc(it.label) + "</h4>" + (it.point ? "<p>" + esc(it.point) + "</p>" : "") + refChips(it.refs) + "</div>"; }).join("") + "</div></div>"; }
 
-function argHTML(a, i){
+function argHTML(a, i, c){
+  var rk = c ? rkey(c, "a", i) : "";
   var resp = a.response || {};
-  var head = '<summary><div class="sh"><span class="k">' + (i + 1) + '</span><div class="tt"><h3>' + esc(a.claim) + "</h3>" + (a.target ? '<div class="tgt">' + (ANS ? "The book opposes: " : "Opposes: ") + esc(a.target) + "</div>" : "") + '</div><span class="chev">' + IC.chev + "</span></div></summary>";
-  if (!ANS) return '<details class="arg"' + (i < 3 ? " open" : "") + ">" + head + '<div class="body"><p>' + esc(a.detail) + "</p>" + refChips(a.refs) + "</div></details>";
+  var head = '<summary><div class="sh"><span class="k">' + (i + 1) + '</span><div class="tt"><h3>' + esc(a.claim) + "</h3>" + (a.target ? '<div class="tgt">' + (ANS ? "The book opposes: " : "Opposes: ") + esc(a.target) + "</div>" : "") + "</div>" + (rk ? respBadge(rk) : "") + '<span class="chev">' + IC.chev + "</span></div></summary>";
+  if (!ANS) return '<details class="arg"' + (rk ? ' id="k-' + rk + '"' : "") + (i < 3 ? " open" : "") + ">" + head + '<div class="body"><p>' + esc(a.detail) + "</p>" + refChips(a.refs) + (rk ? respBox(rk) : "") + "</div></details>";
   return '<details class="arg" data-lenses="' + esc((resp.lenses || []).join(" ")) + '"' + (i < 3 ? " open" : "") + ">" + head +
     '<div class="body"><div class="vs"><div class="side book"><span class="lbl">The book argues</span><p>' + esc(a.detail) + "</p>" + refChips(a.refs) + '</div><div class="side resp"><span class="lbl">The response</span><p>' + esc(resp.text) + "</p>" + lensChips(resp.lenses) + refChips(resp.refs) + "</div></div></div></details>"; }
-function qCard(q, c, withPill){ var s = secOf(c.section), pill = withPill ? '<a class="pill" href="#' + c.id + '" style="align-self:flex-start;--c:var(' + s.v + ')"><span class="d"></span>' + chName(c) + "</a>" : "";
-  if (!ANS) return '<div class="q" style="--c:var(' + s.v + ')">' + pill + '<div class="qq"><i>?</i><span>' + esc(q.q) + '</span></div><div class="ans"><b>The author’s answer</b>' + esc(q.answer) + "</div></div>";
-  return '<div class="q" style="--c:var(' + s.v + ')">' + pill + '<div class="qq"><i>?</i><span>' + esc(q.q) + '</span></div><div class="ans"><b>The book</b>' + esc(q.answer) + '</div><div class="ans r"><b>The response</b>' + esc(q.response) + "</div></div>"; }
+function qCard(q, c, withPill, rk){ var s = secOf(c.section), pill = withPill ? '<a class="pill" href="#' + c.id + '" style="align-self:flex-start;--c:var(' + s.v + ')"><span class="d"></span>' + chName(c) + "</a>" : "";
+  if (!ANS) return '<div class="q"' + (rk ? ' id="k-' + rk + '"' : "") + ' style="--c:var(' + s.v + ')">' + pill + '<div class="qq"><i>?</i><span>' + esc(q.q) + '</span></div><div class="ans"><b>The author’s answer</b>' + esc(q.answer) + "</div>" + (rk ? respBox(rk) : "") + "</div>";
+  return '<div class="q"' + (rk ? ' id="k-' + rk + '"' : "") + ' style="--c:var(' + s.v + ')">' + pill + '<div class="qq"><i>?</i><span>' + esc(q.q) + '</span></div><div class="ans"><b>The book</b>' + esc(q.answer) + '</div><div class="ans r"><b>The response</b>' + esc(q.response) + "</div></div>"; }
 function inflChips(c){ return '<div class="infl">' + c.infl.map(function(k){ var t = INFL_BY[k]; return '<a class="ichip" href="#influences" data-infl="' + k + '" style="--ic:var(' + t.v + ')"><span class="dot"></span><span><b>' + esc(t.name) + "</b><small>" + esc(ANS ? t.resp : t.what) + "</small></span></a>"; }).join("") + "</div>"; }
 
 function vChapter(c){
@@ -606,9 +758,9 @@ function vChapter(c){
   if (c.outlinesAll.length) h += '<section class="blk" id="b-ol"><h2>' + (c.outlinesAll.length > 1 ? 'Outlines <span class="n">' + c.outlinesAll.length + "</span>" : "Outline") + "</h2>" + c.outlinesAll.map(outlineHTML).join("") + "</section>";
   if (c.claims.length) h += '<section class="blk" id="b-ar"><h2>' + (ANS ? "Arguments & answers" : "Arguments") + ' <span class="n">' + c.claims.length + "</span></h2>" +
     (ANS && used.length > 1 ? '<div class="toolbar" id="lensbar"><span class="eyebrow">Filter by lens</span><button class="chipbtn on" data-l="">All</button>' + used.map(function(l){ return '<button class="chipbtn" data-l="' + l.key + '" style="--lc:var(' + l.v + ')"><span class="d"></span>' + l.label + "</button>"; }).join("") + "</div>" : "") +
-    '<div class="toolbar"><button class="chipbtn" data-all="open">Expand all</button><button class="chipbtn" data-all="close">Collapse all</button></div><div class="args">' + c.claims.map(argHTML).join("") + "</div></section>";
-  if (c.questions.length) h += '<section class="blk" id="b-qa"><h2>Questions <span class="n">' + c.questions.length + '</span></h2><div class="qs">' + c.questions.map(function(q){ return qCard(q, c); }).join("") + "</div></section>";
-  if (c.criticisms.length) h += '<section class="blk" id="b-cr"><h2>' + (ANS ? "Critiques & replies" : "Critiques") + ' <span class="n">' + c.criticisms.length + '</span></h2><div class="crit">' + c.criticisms.map(function(k){ return '<div class="cr"><div class="who">' + IC.person + "<span>" + esc(k.of) + '</span></div><div class="what">' + (k.quote ? "<blockquote>" + esc(k.quote) + "</blockquote>" : "") + '<div><div class="eyebrow">The book’s critique</div><p>' + esc(k.critique) + "</p></div>" + (ANS && k.response ? '<div class="side resp"><span class="lbl">Reply</span><p>' + esc(k.response) + "</p></div>" : "") + "</div></div>"; }).join("") + "</div></section>";
+    '<div class="toolbar"><button class="chipbtn" data-all="open">Expand all</button><button class="chipbtn" data-all="close">Collapse all</button></div><div class="args">' + c.claims.map(function(a, i){ return argHTML(a, i, c); }).join("") + "</div></section>";
+  if (c.questions.length) h += '<section class="blk" id="b-qa"><h2>Questions <span class="n">' + c.questions.length + '</span></h2><div class="qs">' + c.questions.map(function(q, i){ return qCard(q, c, false, rkey(c, "q", i)); }).join("") + "</div></section>";
+  if (c.criticisms.length) h += '<section class="blk" id="b-cr"><h2>' + (ANS ? "Critiques & replies" : "Critiques") + ' <span class="n">' + c.criticisms.length + '</span></h2><div class="crit">' + c.criticisms.map(function(k, ci){ var crk = rkey(c, "c", ci); return '<div class="cr" id="k-' + crk + '"><div class="who">' + IC.person + "<span>" + esc(k.of) + '</span></div><div class="what">' + (k.quote ? "<blockquote>" + esc(k.quote) + "</blockquote>" : "") + '<div><div class="eyebrow">The book’s critique</div><p>' + esc(k.critique) + "</p></div>" + (ANS && k.response ? '<div class="side resp"><span class="lbl">Reply</span><p>' + esc(k.response) + "</p></div>" : "") + respBox(crk) + "</div></div>"; }).join("") + "</div></section>";
   if (c.illustrations.length) h += '<section class="blk" id="b-st"><h2>Stories & illustrations <span class="n">' + c.illustrations.length + '</span></h2><div class="stories">' + c.illustrations.map(function(t){ return '<div class="story"><span class="ic">' + storyIcon(t.title + " " + t.story) + "</span><h4>" + esc(t.title) + "</h4><p>" + esc(t.story) + '</p><div class="pt">' + esc(t.point) + "</div></div>"; }).join("") + "</div></section>";
   if (c.keyVerses.length) h += '<section class="blk" id="b-kv"><h2>Key verses <span class="n">' + c.keyVerses.length + '</span></h2><div class="verses">' + c.keyVerses.map(function(v){ return '<div class="verse"><span class="vr">' + esc(v.ref) + "</span>" + (v.text ? '<span class="vt">“' + esc(v.text) + "”</span>" : "") + "<small>" + esc(v.use) + "</small></div>"; }).join("") + "</div></section>";
   h += '<div class="pager">' + (prev ? '<a href="#' + prev.id + '"><small>← ' + chName(prev) + "</small>" + esc(prev.title) + "</a>" : "") + (next ? '<a class="nx" href="#' + next.id + '"><small>' + chName(next) + " →</small>" + esc(next.title) + "</a>" : "") + "</div></div>";
@@ -756,16 +908,19 @@ function route(){
   else if (h === "questions") { html = vQuestions(); wire = filterWire("qq", ".q", "qnone"); }
   else if (h === "scripture") { html = vScripture(); wire = wireScripture; }
   else if (h === "search") { html = vSearch(); wire = wireSearch; }
+  else if (h === "responses" && !ANS) { html = vResponses(); wire = wireResponses; }
   else { h = "home"; html = vHome(); wire = wireMap; }
   app.innerHTML = '<div class="view">' + html + "</div>";
   app.setAttribute("data-view", h);
   if (wire) wire(app);
-  if (pendingScroll) { var id = pendingScroll; pendingScroll = null; setTimeout(function(){ scrollToEl(document.getElementById(id)); }, 80); }
+  paintResponses(app);
+  if (pendingScroll) { var id = pendingScroll; pendingScroll = null; setTimeout(function(){ var el = document.getElementById(id); if (el && el.tagName === "DETAILS") el.open = true; scrollToEl(el); if (el && id.indexOf("k-") === 0) { el.classList.add("flash"); setTimeout(function(){ el.classList.remove("flash"); }, 1600); } }, 80); }
   else window.scrollTo(0, 0);
 }
 window.addEventListener("hashchange", route);
 window.addEventListener("resize", function(){ var w = window.innerWidth; if (app.getAttribute("data-view") === "home" && (w < 560) !== (lastW < 560)) { var y = window.pageYOffset; route(); window.scrollTo(0, y); } lastW = w; });
 route();
+initResponses();
 })();
 
 </script>
